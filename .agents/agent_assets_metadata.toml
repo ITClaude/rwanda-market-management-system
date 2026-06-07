@@ -1,0 +1,20 @@
+uploads = []
+generated = []
+
+[[outputs]]
+id = "X2ukA7zAk_ydY88AHedl-"
+uri = "file://rmms-offline.tar.gz"
+type = "unspecified"
+title = "RMMS – Full Source Code (tar.gz)"
+
+[[outputs]]
+id = "fIFw5SkGe-CT8eLkpYh0s"
+uri = "file://LOCAL_SETUP.md"
+type = "text"
+title = "Local Setup Guide"
+
+[[outputs]]
+id = "lA_9Y8N1OPx36tuX1Y_54"
+uri = "file://rmms-offline.zip"
+type = "unspecified"
+title = "RMMS – Full Source Code (.zip)"

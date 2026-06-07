@@ -1,0 +1,1267 @@
+openapi: 3.1.0
+info:
+  title: Api
+  version: 0.1.0
+  description: Rwanda Market Management System API
+servers:
+  - url: /api
+    description: Base API path
+tags:
+  - name: health
+    description: Health operations
+  - name: auth
+    description: Authentication operations
+  - name: markets
+    description: Market operations
+  - name: slots
+    description: Slot management
+  - name: vendors
+    description: Vendor management
+  - name: payments
+    description: Payment tracking
+  - name: expenses
+    description: Expense management
+  - name: notifications
+    description: Notification logs
+  - name: dashboard
+    description: Dashboard summaries
+
+paths:
+  /healthz:
+    get:
+      operationId: healthCheck
+      tags: [health]
+      summary: Health check
+      responses:
+        "200":
+          description: Healthy
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/HealthStatus"
+
+  /auth/login:
+    post:
+      operationId: login
+      tags: [auth]
+      summary: Login and get JWT token
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/LoginBody"
+      responses:
+        "200":
+          description: Login successful
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/LoginResponse"
+        "401":
+          description: Invalid credentials
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+
+  /auth/me:
+    get:
+      operationId: getMe
+      tags: [auth]
+      summary: Get current user profile
+      security:
+        - bearerAuth: []
+      responses:
+        "200":
+          description: Current user
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/User"
+
+  /markets:
+    get:
+      operationId: listMarkets
+      tags: [markets]
+      summary: List all markets
+      security:
+        - bearerAuth: []
+      responses:
+        "200":
+          description: List of markets
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/Market"
+    post:
+      operationId: createMarket
+      tags: [markets]
+      summary: Create a new market
+      security:
+        - bearerAuth: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/CreateMarketBody"
+      responses:
+        "201":
+          description: Market created
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Market"
+
+  /markets/{id}:
+    get:
+      operationId: getMarket
+      tags: [markets]
+      summary: Get a market by ID
+      security:
+        - bearerAuth: []
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: integer
+      responses:
+        "200":
+          description: Market detail
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Market"
+        "404":
+          description: Not found
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+    patch:
+      operationId: updateMarket
+      tags: [markets]
+      summary: Update a market
+      security:
+        - bearerAuth: []
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: integer
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/UpdateMarketBody"
+      responses:
+        "200":
+          description: Market updated
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Market"
+
+  /slots:
+    get:
+      operationId: listSlots
+      tags: [slots]
+      summary: List slots, optionally filtered by market
+      security:
+        - bearerAuth: []
+      parameters:
+        - name: marketId
+          in: query
+          schema:
+            type: ["integer", "null"]
+        - name: status
+          in: query
+          schema:
+            type: ["string", "null"]
+        - name: zone
+          in: query
+          schema:
+            type: ["string", "null"]
+      responses:
+        "200":
+          description: List of slots
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/Slot"
+    post:
+      operationId: createSlot
+      tags: [slots]
+      summary: Create a new slot
+      security:
+        - bearerAuth: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/CreateSlotBody"
+      responses:
+        "201":
+          description: Slot created
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Slot"
+
+  /slots/{id}:
+    get:
+      operationId: getSlot
+      tags: [slots]
+      summary: Get a slot by ID
+      security:
+        - bearerAuth: []
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: integer
+      responses:
+        "200":
+          description: Slot detail
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Slot"
+        "404":
+          description: Not found
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+    patch:
+      operationId: updateSlot
+      tags: [slots]
+      summary: Update a slot
+      security:
+        - bearerAuth: []
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: integer
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/UpdateSlotBody"
+      responses:
+        "200":
+          description: Slot updated
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Slot"
+
+  /slots/{id}/assign:
+    post:
+      operationId: assignVendorToSlot
+      tags: [slots]
+      summary: Assign a vendor to a slot
+      security:
+        - bearerAuth: []
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: integer
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/AssignVendorBody"
+      responses:
+        "200":
+          description: Vendor assigned
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Slot"
+
+  /slots/{id}/vacate:
+    post:
+      operationId: vacateSlot
+      tags: [slots]
+      summary: Vacate a slot (remove vendor)
+      security:
+        - bearerAuth: []
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: integer
+      responses:
+        "200":
+          description: Slot vacated
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Slot"
+
+  /vendors:
+    get:
+      operationId: listVendors
+      tags: [vendors]
+      summary: List vendors, optionally filtered by market
+      security:
+        - bearerAuth: []
+      parameters:
+        - name: marketId
+          in: query
+          schema:
+            type: ["integer", "null"]
+      responses:
+        "200":
+          description: List of vendors
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/Vendor"
+    post:
+      operationId: createVendor
+      tags: [vendors]
+      summary: Register a new vendor
+      security:
+        - bearerAuth: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/CreateVendorBody"
+      responses:
+        "201":
+          description: Vendor created
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Vendor"
+
+  /vendors/{id}:
+    get:
+      operationId: getVendor
+      tags: [vendors]
+      summary: Get a vendor by ID
+      security:
+        - bearerAuth: []
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: integer
+      responses:
+        "200":
+          description: Vendor detail
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Vendor"
+        "404":
+          description: Not found
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+    patch:
+      operationId: updateVendor
+      tags: [vendors]
+      summary: Update vendor info
+      security:
+        - bearerAuth: []
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: integer
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/UpdateVendorBody"
+      responses:
+        "200":
+          description: Vendor updated
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Vendor"
+
+  /payments:
+    get:
+      operationId: listPayments
+      tags: [payments]
+      summary: List payments, optionally filtered
+      security:
+        - bearerAuth: []
+      parameters:
+        - name: marketId
+          in: query
+          schema:
+            type: ["integer", "null"]
+        - name: vendorId
+          in: query
+          schema:
+            type: ["integer", "null"]
+        - name: status
+          in: query
+          schema:
+            type: ["string", "null"]
+      responses:
+        "200":
+          description: List of payments
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/Payment"
+    post:
+      operationId: createPayment
+      tags: [payments]
+      summary: Record a new payment
+      security:
+        - bearerAuth: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/CreatePaymentBody"
+      responses:
+        "201":
+          description: Payment recorded
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Payment"
+
+  /payments/{id}:
+    get:
+      operationId: getPayment
+      tags: [payments]
+      summary: Get a payment by ID
+      security:
+        - bearerAuth: []
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: integer
+      responses:
+        "200":
+          description: Payment detail
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Payment"
+    patch:
+      operationId: updatePayment
+      tags: [payments]
+      summary: Update a payment record
+      security:
+        - bearerAuth: []
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: integer
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/UpdatePaymentBody"
+      responses:
+        "200":
+          description: Payment updated
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Payment"
+
+  /expenses:
+    get:
+      operationId: listExpenses
+      tags: [expenses]
+      summary: List expenses, optionally filtered by market
+      security:
+        - bearerAuth: []
+      parameters:
+        - name: marketId
+          in: query
+          schema:
+            type: ["integer", "null"]
+        - name: category
+          in: query
+          schema:
+            type: ["string", "null"]
+      responses:
+        "200":
+          description: List of expenses
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/Expense"
+    post:
+      operationId: createExpense
+      tags: [expenses]
+      summary: Add a new expense
+      security:
+        - bearerAuth: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/CreateExpenseBody"
+      responses:
+        "201":
+          description: Expense created
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Expense"
+
+  /expenses/{id}:
+    delete:
+      operationId: deleteExpense
+      tags: [expenses]
+      summary: Delete an expense
+      security:
+        - bearerAuth: []
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: integer
+      responses:
+        "204":
+          description: Deleted
+
+  /notifications:
+    get:
+      operationId: listNotifications
+      tags: [notifications]
+      summary: List notification log entries
+      security:
+        - bearerAuth: []
+      parameters:
+        - name: marketId
+          in: query
+          schema:
+            type: ["integer", "null"]
+        - name: limit
+          in: query
+          schema:
+            type: ["integer", "null"]
+      responses:
+        "200":
+          description: List of notifications
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/Notification"
+
+  /notifications/trigger:
+    post:
+      operationId: triggerNotifications
+      tags: [notifications]
+      summary: Manually trigger the payment notification check
+      security:
+        - bearerAuth: []
+      responses:
+        "200":
+          description: Notifications triggered
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/TriggerNotificationsResponse"
+
+  /dashboard/summary:
+    get:
+      operationId: getDashboardSummary
+      tags: [dashboard]
+      summary: Get national dashboard summary across all markets
+      security:
+        - bearerAuth: []
+      responses:
+        "200":
+          description: Dashboard summary
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/DashboardSummary"
+
+  /dashboard/market/{marketId}:
+    get:
+      operationId: getMarketDashboard
+      tags: [dashboard]
+      summary: Get dashboard summary for a specific market
+      security:
+        - bearerAuth: []
+      parameters:
+        - name: marketId
+          in: path
+          required: true
+          schema:
+            type: integer
+      responses:
+        "200":
+          description: Market dashboard
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/MarketDashboard"
+
+components:
+  securitySchemes:
+    bearerAuth:
+      type: http
+      scheme: bearer
+      bearerFormat: JWT
+
+  schemas:
+    HealthStatus:
+      type: object
+      properties:
+        status:
+          type: string
+      required:
+        - status
+
+    ErrorResponse:
+      type: object
+      properties:
+        error:
+          type: string
+      required:
+        - error
+
+    LoginBody:
+      type: object
+      properties:
+        username:
+          type: string
+        password:
+          type: string
+      required:
+        - username
+        - password
+
+    LoginResponse:
+      type: object
+      properties:
+        token:
+          type: string
+        user:
+          $ref: "#/components/schemas/User"
+      required:
+        - token
+        - user
+
+    User:
+      type: object
+      properties:
+        id:
+          type: integer
+        username:
+          type: string
+        role:
+          type: string
+        marketId:
+          type: ["integer", "null"]
+        name:
+          type: string
+        createdAt:
+          type: string
+      required:
+        - id
+        - username
+        - role
+        - name
+        - createdAt
+
+    Market:
+      type: object
+      properties:
+        id:
+          type: integer
+        name:
+          type: string
+        code:
+          type: string
+        location:
+          type: string
+        district:
+          type: string
+        totalSlots:
+          type: integer
+        status:
+          type: string
+        createdAt:
+          type: string
+        updatedAt:
+          type: string
+      required:
+        - id
+        - name
+        - code
+        - location
+        - district
+        - totalSlots
+        - status
+        - createdAt
+        - updatedAt
+
+    CreateMarketBody:
+      type: object
+      properties:
+        name:
+          type: string
+        code:
+          type: string
+        location:
+          type: string
+        district:
+          type: string
+        totalSlots:
+          type: integer
+        status:
+          type: string
+      required:
+        - name
+        - code
+        - location
+        - district
+        - totalSlots
+
+    UpdateMarketBody:
+      type: object
+      properties:
+        name:
+          type: string
+        location:
+          type: string
+        district:
+          type: string
+        totalSlots:
+          type: integer
+        status:
+          type: string
+
+    Slot:
+      type: object
+      properties:
+        id:
+          type: integer
+        marketId:
+          type: integer
+        slotNumber:
+          type: string
+        zone:
+          type: string
+        slotSize:
+          type: string
+        slotType:
+          type: string
+        monthlyFee:
+          type: number
+        status:
+          type: string
+        vendorId:
+          type: ["integer", "null"]
+        vendorName:
+          type: ["string", "null"]
+        occupiedSince:
+          type: ["string", "null"]
+        contractStartDate:
+          type: ["string", "null"]
+        contractEndDate:
+          type: ["string", "null"]
+        paymentCycle:
+          type: ["string", "null"]
+        notes:
+          type: ["string", "null"]
+        createdAt:
+          type: string
+        updatedAt:
+          type: string
+      required:
+        - id
+        - marketId
+        - slotNumber
+        - zone
+        - slotSize
+        - slotType
+        - monthlyFee
+        - status
+        - createdAt
+        - updatedAt
+
+    CreateSlotBody:
+      type: object
+      properties:
+        marketId:
+          type: integer
+        slotNumber:
+          type: string
+        zone:
+          type: string
+        slotSize:
+          type: string
+        slotType:
+          type: string
+        monthlyFee:
+          type: number
+        notes:
+          type: string
+      required:
+        - marketId
+        - slotNumber
+        - zone
+        - slotSize
+        - slotType
+        - monthlyFee
+
+    UpdateSlotBody:
+      type: object
+      properties:
+        slotSize:
+          type: string
+        slotType:
+          type: string
+        monthlyFee:
+          type: number
+        status:
+          type: string
+        notes:
+          type: string
+
+    AssignVendorBody:
+      type: object
+      properties:
+        vendorId:
+          type: integer
+        contractStartDate:
+          type: string
+        contractEndDate:
+          type: ["string", "null"]
+        paymentCycle:
+          type: string
+        firstPaymentDueDate:
+          type: string
+      required:
+        - vendorId
+        - contractStartDate
+        - paymentCycle
+        - firstPaymentDueDate
+
+    Vendor:
+      type: object
+      properties:
+        id:
+          type: integer
+        name:
+          type: string
+        phone:
+          type: string
+        email:
+          type: ["string", "null"]
+        nationalId:
+          type: ["string", "null"]
+        businessName:
+          type: ["string", "null"]
+        businessCategory:
+          type: ["string", "null"]
+        marketId:
+          type: ["integer", "null"]
+        slotId:
+          type: ["integer", "null"]
+        slotNumber:
+          type: ["string", "null"]
+        status:
+          type: string
+        registeredAt:
+          type: string
+        createdAt:
+          type: string
+        updatedAt:
+          type: string
+      required:
+        - id
+        - name
+        - phone
+        - status
+        - registeredAt
+        - createdAt
+        - updatedAt
+
+    CreateVendorBody:
+      type: object
+      properties:
+        name:
+          type: string
+        phone:
+          type: string
+        email:
+          type: string
+        nationalId:
+          type: string
+        businessName:
+          type: string
+        businessCategory:
+          type: string
+        marketId:
+          type: integer
+      required:
+        - name
+        - phone
+
+    UpdateVendorBody:
+      type: object
+      properties:
+        name:
+          type: string
+        phone:
+          type: string
+        email:
+          type: string
+        businessName:
+          type: string
+        businessCategory:
+          type: string
+        status:
+          type: string
+
+    Payment:
+      type: object
+      properties:
+        id:
+          type: integer
+        vendorId:
+          type: integer
+        vendorName:
+          type: ["string", "null"]
+        slotId:
+          type: integer
+        slotNumber:
+          type: ["string", "null"]
+        marketId:
+          type: integer
+        marketName:
+          type: ["string", "null"]
+        amount:
+          type: number
+        dueDate:
+          type: string
+        paidDate:
+          type: ["string", "null"]
+        status:
+          type: string
+        paymentCycle:
+          type: string
+        notes:
+          type: ["string", "null"]
+        createdAt:
+          type: string
+        updatedAt:
+          type: string
+      required:
+        - id
+        - vendorId
+        - slotId
+        - marketId
+        - amount
+        - dueDate
+        - status
+        - paymentCycle
+        - createdAt
+        - updatedAt
+
+    CreatePaymentBody:
+      type: object
+      properties:
+        vendorId:
+          type: integer
+        slotId:
+          type: integer
+        marketId:
+          type: integer
+        amount:
+          type: number
+        dueDate:
+          type: string
+        paidDate:
+          type: string
+        status:
+          type: string
+        paymentCycle:
+          type: string
+        notes:
+          type: string
+      required:
+        - vendorId
+        - slotId
+        - marketId
+        - amount
+        - dueDate
+        - status
+        - paymentCycle
+
+    UpdatePaymentBody:
+      type: object
+      properties:
+        amount:
+          type: number
+        paidDate:
+          type: string
+        status:
+          type: string
+        notes:
+          type: string
+
+    Expense:
+      type: object
+      properties:
+        id:
+          type: integer
+        marketId:
+          type: integer
+        marketName:
+          type: ["string", "null"]
+        category:
+          type: string
+        description:
+          type: string
+        amount:
+          type: number
+        expenseDate:
+          type: string
+        createdBy:
+          type: ["string", "null"]
+        createdAt:
+          type: string
+      required:
+        - id
+        - marketId
+        - category
+        - description
+        - amount
+        - expenseDate
+        - createdAt
+
+    CreateExpenseBody:
+      type: object
+      properties:
+        marketId:
+          type: integer
+        category:
+          type: string
+        description:
+          type: string
+        amount:
+          type: number
+        expenseDate:
+          type: string
+      required:
+        - marketId
+        - category
+        - description
+        - amount
+        - expenseDate
+
+    Notification:
+      type: object
+      properties:
+        id:
+          type: integer
+        vendorId:
+          type: ["integer", "null"]
+        vendorName:
+          type: ["string", "null"]
+        marketId:
+          type: ["integer", "null"]
+        type:
+          type: string
+        message:
+          type: string
+        channel:
+          type: string
+        status:
+          type: string
+        createdAt:
+          type: string
+      required:
+        - id
+        - type
+        - message
+        - channel
+        - status
+        - createdAt
+
+    TriggerNotificationsResponse:
+      type: object
+      properties:
+        sent:
+          type: integer
+        message:
+          type: string
+      required:
+        - sent
+        - message
+
+    DashboardSummary:
+      type: object
+      properties:
+        totalMarkets:
+          type: integer
+        totalSlots:
+          type: integer
+        occupiedSlots:
+          type: integer
+        availableSlots:
+          type: integer
+        maintenanceSlots:
+          type: integer
+        occupancyRate:
+          type: number
+        totalVendors:
+          type: integer
+        totalRevenue:
+          type: number
+        totalExpenses:
+          type: number
+        overduePayments:
+          type: integer
+        overdueAmount:
+          type: number
+        recentPayments:
+          type: array
+          items:
+            $ref: "#/components/schemas/Payment"
+        marketBreakdown:
+          type: array
+          items:
+            $ref: "#/components/schemas/MarketSummary"
+      required:
+        - totalMarkets
+        - totalSlots
+        - occupiedSlots
+        - availableSlots
+        - maintenanceSlots
+        - occupancyRate
+        - totalVendors
+        - totalRevenue
+        - totalExpenses
+        - overduePayments
+        - overdueAmount
+        - recentPayments
+        - marketBreakdown
+
+    MarketSummary:
+      type: object
+      properties:
+        marketId:
+          type: integer
+        marketName:
+          type: string
+        totalSlots:
+          type: integer
+        occupiedSlots:
+          type: integer
+        revenue:
+          type: number
+        expenses:
+          type: number
+        overduePayments:
+          type: integer
+      required:
+        - marketId
+        - marketName
+        - totalSlots
+        - occupiedSlots
+        - revenue
+        - expenses
+        - overduePayments
+
+    MarketDashboard:
+      type: object
+      properties:
+        market:
+          $ref: "#/components/schemas/Market"
+        totalSlots:
+          type: integer
+        occupiedSlots:
+          type: integer
+        availableSlots:
+          type: integer
+        maintenanceSlots:
+          type: integer
+        reservedSlots:
+          type: integer
+        occupancyRate:
+          type: number
+        totalVendors:
+          type: integer
+        monthlyRevenue:
+          type: number
+        totalExpenses:
+          type: number
+        overduePayments:
+          type: integer
+        overdueAmount:
+          type: number
+        recentPayments:
+          type: array
+          items:
+            $ref: "#/components/schemas/Payment"
+        recentNotifications:
+          type: array
+          items:
+            $ref: "#/components/schemas/Notification"
+      required:
+        - market
+        - totalSlots
+        - occupiedSlots
+        - availableSlots
+        - maintenanceSlots
+        - reservedSlots
+        - occupancyRate
+        - totalVendors
+        - monthlyRevenue
+        - totalExpenses
+        - overduePayments
+        - overdueAmount
+        - recentPayments
+        - recentNotifications
